@@ -1,0 +1,81 @@
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS admins (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  phone TEXT UNIQUE NOT NULL,
+  verified INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS rooms (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  room_id TEXT UNIQUE NOT NULL,
+  host_phone TEXT,
+  max_participants INTEGER DEFAULT 10,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS room_whitelist (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  room_id TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  added_by_admin INTEGER,
+  added_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY(room_id) REFERENCES rooms(room_id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS messages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  message_id TEXT UNIQUE,
+  room_id TEXT NOT NULL,
+  sender_phone TEXT NOT NULL,
+  text TEXT,
+  ts DATETIME DEFAULT CURRENT_TIMESTAMP,
+  delivered INTEGER DEFAULT 0,
+  seen INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  room_id TEXT,
+  phone TEXT NOT NULL,
+  ua TEXT,
+  platform TEXT,
+  device_model TEXT,
+  ip TEXT,
+  geo TEXT,
+  connected_at DATETIME,
+  disconnected_at DATETIME,
+  otp_hash TEXT,
+  otp_expires_at DATETIME,
+  session_token TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS admin_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  admin_id INTEGER,
+  action TEXT,
+  target TEXT,
+  ts DATETIME DEFAULT CURRENT_TIMESTAMP,
+  metadata TEXT
+);
+
+CREATE TABLE IF NOT EXISTS otp_attempts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  phone TEXT,
+  ip TEXT,
+  attempts INTEGER DEFAULT 0,
+  last_attempt_at DATETIME,
+  locked_until DATETIME
+);
+
+CREATE INDEX IF NOT EXISTS idx_otp_attempts_phone ON otp_attempts(phone);
+CREATE INDEX IF NOT EXISTS idx_otp_attempts_ip ON otp_attempts(ip);

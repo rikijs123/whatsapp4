@@ -1,0 +1,29 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  server-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install server deps
+        working-directory: server
+        run: npm ci
+      - name: Run migrations
+        working-directory: server
+        run: npm run migrate
+      - name: Start server
+        working-directory: server
+        run: nohup npm run start &
+      - name: Wait for server
+        run: npx wait-on http://localhost:3000
+      - name: Run smoke tests
+        working-directory: server
+        env:
+          BASE_URL: http://localhost:3000
+        run: npm run test:smoke
